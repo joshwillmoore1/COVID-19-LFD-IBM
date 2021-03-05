@@ -10,7 +10,7 @@ function TestingSchedule=ChangeTestingSchedule(Flag,Day,TestingScenario)
 
 % Day is the day number on which the Symptomatic is found
 if Day<0||Day>28
-    error("EXPECTION: Day should be and integer between 1 and 28, inclusive.")
+    error("EXCEPTION: Day should be and integer between 1 and 28, inclusive.")
 end
 % TestingScenario flags the recurrence of a testing:
 % TestingScenario = 0 -> no testing
