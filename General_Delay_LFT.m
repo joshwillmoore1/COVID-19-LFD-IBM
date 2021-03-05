@@ -65,7 +65,7 @@ tRec = 10;
 %number of simulations
 NoS = 1e3;
 
-%intiail testing days
+%intial testing days
 TestingDays = zeros(1,28);
 
 if MixInd == 1
@@ -89,7 +89,7 @@ Groups = Ntot/SubgroupSize;
 
 %checking for errors
 if length(TestingDays) ~= length(MixingDays)
-    error("EXPECTION: Testing days and agent mixing days must be the same length")
+    error("EXCEPTION: Testing days and agent mixing days must be the same length")
 end
 
 if floor(Ntot/SubgroupSize) ~= Ntot/SubgroupSize
