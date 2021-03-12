@@ -65,7 +65,7 @@ tRec = 10;
 %number of simulations
 NoS = 1e3;
 
-%intial testing days
+%intiail testing days
 TestingDays = zeros(1,28);
 
 if MixInd == 1
@@ -89,7 +89,7 @@ Groups = Ntot/SubgroupSize;
 
 %checking for errors
 if length(TestingDays) ~= length(MixingDays)
-    error("EXCEPTION: Testing days and agent mixing days must be the same length")
+    error("EXPECTION: Testing days and agent mixing days must be the same length")
 end
 
 if floor(Ntot/SubgroupSize) ~= Ntot/SubgroupSize
@@ -392,16 +392,37 @@ for i = 1:NoS
                         end
                     end
                 end
+                
+                %Produce False positives
+                if (ActivePop(z) == 0)
+                    if rand(1,1)<PerFalsePos
+                        if rand(1,1) < CompIso
+                            %false LFT: 'remove' agent from pop. and
+                            ActivePop(z) = 3;
+                            CountDownDetection(z) = Inf;
+                            CountDownInfectious(z) = Inf;
+                            CountDownRecovery(z) = tRec;
+                            posTestIndices = [posTestIndices ,z];
+                        end
+                    end
+                end
+                
+                 %Produce False positives
+                if (ActivePop(z) == 2)
+                    if rand(1,1)<PerFalsePos
+                        if rand(1,1) < CompIso
+                            %false LFT: 'remove' agent from pop. and
+                            ActivePop(z) = 5;
+                            CountDownDetection(z) = Inf;
+                            CountDownInfectious(z) = Inf;
+                            CountDownRecovery(z) = tRec;
+                            posTestIndices = [posTestIndices ,z];
+                        end
+                    end
+                end
+                
             end
-            
-            %Produce False positives
-            Iterates1=[];
-            Iterates2=[];
-            Iterates1=find(ActivePop==0); %Find the healthy people
-            Iterates2=find((rand(size(Iterates1))<(PerFalsePos)*CompIso)==1); %Give some healthy people a positive test with probability 3/980.
-            posTestIndices =sort([posTestIndices,Iterates1(Iterates2)]); %Add false positive locations to posTestIndices.
-            ActivePop(Iterates1(Iterates2))=3; %Convert healthy people to healthy isolated.
-            
+         
             
             %split the total pop into subgroups
             Subgroups = mat2cell(ActivePop,1, SubgroupSize.*ones(1,Groups));
@@ -421,14 +442,14 @@ for i = 1:NoS
                             SubInfectTimer{b}(c) = Inf;
                             SubRecoveryTimer{b}(c) = tRec;
                         end
-                    elseif Subgroups{b}(c) == 2
+                    elseif (Subgroups{b}(c) == 2 || Subgroups{b}(c) == 5)
                         if rand(1,1) < CompIso
                             Subgroups{b}(c) = 5;
                             SubDetectTimer{b}(c) = Inf;
                             SubInfectTimer{b}(c) = Inf;
                             SubRecoveryTimer{b}(c) = tRec;
                         end
-                    else
+                    elseif (Subgroups{b}(c) == 0 || Subgroups{b}(c) == 3)
                         if rand(1,1) < CompIso
                             Subgroups{b}(c) = 3;
                             SubDetectTimer{b}(c) = Inf;
@@ -473,7 +494,8 @@ for i = 1:NoS
             %inter-group infections
             SiReIndicesInter = poissrnd(Rinter, NumOfInfectious,1);
             
-            %check that infections cannot be larger than 0's
+            %check that infections cannot be larger than the numnber of
+            %sus.
             for a = 1:length(infected_indices)
                 b = floor((infected_indices(a)-1)/SubgroupSize)+1;
                 SiReIndicesIntra(a) = min(SiReIndicesIntra(a),sum(Subgroups{b}==0));
@@ -536,12 +558,14 @@ for i = 1:NoS
                 for z = 1:SiReIndicesInter(v)
                     for c = 1:((Groups-1)*SubgroupSize)
                         groupAndIndex = randomAvailIndices(c,:);
+                        
                         if Subgroups{groupAndIndex(1)}(groupAndIndex(2)) == 0
                             if rand(1,1) < PerSymptomatic
                                 Subgroups{groupAndIndex(1)}(groupAndIndex(2)) = 4;
                             else
                                 Subgroups{groupAndIndex(1)}(groupAndIndex(2)) = 1;
                             end
+                            
                             SubDetectTimer{groupAndIndex(1)}(groupAndIndex(2)) = tDet;
                             SubInfectTimer{groupAndIndex(1)}(groupAndIndex(2)) = tInf;
                             SubRecoveryTimer{groupAndIndex(1)}(groupAndIndex(2)) = tRec;
@@ -605,28 +629,28 @@ for i = 1:NoS
             for a = 1:length(posTestIndices)
                 b = floor((posTestIndices(a)-1)/SubgroupSize)+1;
                 for c = 1:length(Subgroups{b})
-                    if Subgroups{b}(c) == 1 || isnan(Subgroups{b}(c)) || Subgroups{b}(c) == 4
+                    if Subgroups{b}(c) == 1 || isnan(Subgroups{b}(c)) ...
+                            || Subgroups{b}(c) == 4
                         if rand(1,1) < CompIso
                             Subgroups{b}(c) = NaN;
                             SubDetectTimer{b}(c) = Inf;
                             SubInfectTimer{b}(c) = Inf;
                             SubRecoveryTimer{b}(c) = tRec;
                         end
-                    elseif Subgroups{b}(c) == 2
+                    elseif (Subgroups{b}(c) == 2 || Subgroups{b}(c) == 5)
                         if rand(1,1) < CompIso
                             Subgroups{b}(c) = 5;
                             SubDetectTimer{b}(c) = Inf;
                             SubInfectTimer{b}(c) = Inf;
                             SubRecoveryTimer{b}(c) = tRec;
                         end
-                    else 
+                    elseif (Subgroups{b}(c) == 0 || Subgroups{b}(c) == 3)
                         if rand(1,1) < CompIso
                             Subgroups{b}(c) = 3;
                             SubDetectTimer{b}(c) = Inf;
                             SubInfectTimer{b}(c) = Inf;
                             SubRecoveryTimer{b}(c) = tRec;
                         end
-                        
                     end
                 end
             end
@@ -695,6 +719,13 @@ for i = 1:NoS
     
     if sum(ActivePop==0) == 0
         TotalOutbreakCounter(i) = 1;
+    end
+    
+    % error checking for total infections
+    for j = 2:length(MixingDays)
+        if  HealthyPeople(i,j-1) - HealthyPeople(i,j) <0
+            error("healthy switching occured ")
+        end
     end
     
     
